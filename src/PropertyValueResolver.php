@@ -53,9 +53,13 @@ class PropertyValueResolver {
 		$propertyIds = $this->searchEntities( $property, 'property', $lang );
 
 		$items = $this->getItems( $itemIds );
-		$values = $this->getDataValues( $items, $propertyIds );
+		list( $itemId, $propertyId, $values ) = $this->getDataValues( $items, $propertyIds );
 
-		return $this->formatDataValues( $values );
+		return array(
+			'item' => $itemId,
+			'property' => $propertyId,
+			'values' => $this->formatDataValues( $values )
+		);
 	}
 
 	/**
@@ -112,7 +116,7 @@ class PropertyValueResolver {
 			foreach ( $propertyIds as $propertyId ) {
 				$bestValues = $this->getBestValues( $item->getStatements(), $propertyId );
 				if ( !empty( $bestValues ) ) {
-					return $bestValues;
+					return array( $item->getId()->getSerialization(), $propertyId->getSerialization(), $bestValues );
 				}
 			}
 		}
@@ -147,7 +151,7 @@ class PropertyValueResolver {
 		$formatted = array();
 
 		foreach ( $values as $value ) {
-			$formatted[] = $value->getValue();
+			$formatted[] = $value->toArray();
 		}
 
 		return $formatted;
