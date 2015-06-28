@@ -2,6 +2,8 @@
 
 namespace DDGWikidata;
 
+use Exception;
+
 /**
  * Entry point of the Wikidata DuckDuckGo backend application.
  *
@@ -57,6 +59,7 @@ class Backend {
 	}
 
 	private function outputResult( array $result ) {
+		@header( 'Content-type: application/json' );
 		echo json_encode( $result );
 	}
 

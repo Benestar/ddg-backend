@@ -67,11 +67,11 @@ class PropertyValueResolver {
 	 * @return string|null
 	 */
 	private function searchEntity( $search, $type, $lang ) {
-		$response = $this->api->getRequest( new SimpleRequest( 'wbsearchentities', array(
+		$response = $this->api->getAction( 'wbsearchentities', array(
 			'search' => $search,
 			'type' => $type,
 			'language' => $lang
-		) ) );
+		) );
 
 		if ( empty( $response['search'] ) ) {
 			return null;
