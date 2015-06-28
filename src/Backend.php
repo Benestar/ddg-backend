@@ -33,7 +33,7 @@ class Backend {
 			$this->outputResult( array( 'result' => $this->getResult() ) );
 		}
 		catch ( Exception $ex ) {
-			@http_response_code( 500 );
+			@http_response_code( 400 );
 			$this->outputResult( array( 'error' => $ex->getMessage() ) );
 		}
 	}
