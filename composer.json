@@ -1,0 +1,11 @@
+{
+	"require": {
+		"php": ">=5.5.0",
+		"addwiki/wikibase-api": "~0.4"
+	},
+	"autoload": {
+		"psr-4": {
+			"DDGWikidata\\": "src/"
+		}
+	}
+}
