@@ -37,7 +37,7 @@ class PropertyValueResolver {
 		$this->api = new MediawikiApi( $wikibaseApi );
 
 		$wikibaseFactory = new WikibaseFactory( $this->api );
-		$this->revisionGetter = $wikibaseFactory->newRevisionsGetter();
+		$this->revisionsGetter = $wikibaseFactory->newRevisionsGetter();
 	}
 
 	/**
