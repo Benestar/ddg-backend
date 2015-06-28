@@ -4,7 +4,7 @@ namespace DDGWikidata;
 
 use DataValues\DataValue;
 use Mediawiki\Api\MediawikiApi;
-use Wikibase\Api\Service\RevisionGetter;
+use Wikibase\Api\Service\RevisionsGetter;
 use Wikibase\Api\WikibaseFactory;
 use Wikibase\DataModel\Entity\Item;
 use Wikibase\DataModel\Entity\PropertyId;
@@ -26,9 +26,9 @@ class PropertyValueResolver {
 	private $api;
 
 	/**
-	 * @var RevisionGetter
+	 * @var RevisionsGetter
 	 */
-	private $revisionGetter;
+	private $revisionsGetter;
 
 	/**
 	 * @param string $wikibaseApi
@@ -37,7 +37,7 @@ class PropertyValueResolver {
 		$this->api = new MediawikiApi( $wikibaseApi );
 
 		$wikibaseFactory = new WikibaseFactory( $this->api );
-		$this->revisionGetter = $wikibaseFactory->newRevisionGetter();
+		$this->revisionGetter = $wikibaseFactory->newRevisionsGetter();
 	}
 
 	/**
@@ -47,15 +47,11 @@ class PropertyValueResolver {
 	 * @return array
 	 */
 	public function getResult( $subject, $property, $lang ) {
-		$itemId = $this->searchEntity( $subject, 'item', $lang );
-		$propertyId = $this->searchEntity( $property, 'property', $lang );
+		$itemIds = $this->searchEntities( $subject, 'item', $lang );
+		$propertyIds = $this->searchEntities( $property, 'property', $lang );
 
-		if ( $itemId === null || $property === null ) {
-			return array();
-		}
-
-		$item = $this->getItem( $itemId );
-		$values = $this->getDataValues( $item->getStatements(), new PropertyId( $propertyId ) );
+		$items = $this->getItems( $itemIds );
+		$values = $this->getDataValues( $items, $propertyIds );
 
 		return $this->formatDataValues( $values );
 	}
@@ -64,39 +60,67 @@ class PropertyValueResolver {
 	 * @param string $search
 	 * @param string $type
 	 * @param string $lang
-	 * @return string|null
+	 * @return string[]
 	 */
-	private function searchEntity( $search, $type, $lang ) {
+	private function searchEntities( $search, $type, $lang ) {
 		$response = $this->api->getAction( 'wbsearchentities', array(
 			'search' => $search,
 			'type' => $type,
 			'language' => $lang
 		) );
 
-		if ( empty( $response['search'] ) ) {
-			return null;
+		$ids = array();
+
+		foreach ( $response['search'] as $search ) {
+			$ids[] = $search['id'];
 		}
 
-		return $response['search'][0]['id'];
+		return $ids;
 	}
 
 	/**
-	 * @param string $itemId
-	 * @return Item
+	 * @param string[] $itemIds
+	 * @return Item[]
 	 */
-	private function getItem( $itemId ) {
-		return $this->revisionGetter->getFromId( $itemId )->getContent()->getNativeData();
+	private function getItems( array $itemIds ) {
+		$revisions = $this->revisionsGetter->getRevisions( $itemIds );
+		$items = array();
+
+		foreach ( $revisions->toArray() as $revision ) {
+			$items[] = $revision->getContent()->getNativeData();
+		}
+
+		return $items;
 	}
 
+	/**
+	 * @param Item[] $items
+	 * @param string[] $propertyIds
+	 * @return DataValue[]
+	 */
+	private function getDataValues( array $items, array $propertyIds ) {
+		foreach ( $items as $item ) {
+			foreach ( $propertyIds as $propertyId ) {
+				$bestValues = $this->getBestValues( $item->getStatements(), new PropertyId( $propertyId ) );
+				if ( !empty( $bestValues ) ) {
+					return $bestValues;
+				}
+			}
+		}
+
+		return array();
+	}
+
+	
 	/**
 	 * @param StatementList $statements
 	 * @param PropertyId $propertyId
 	 * @return DataValue[]
 	 */
-	private function getDataValues( StatementList $statements, PropertyId $propertyId ) {
-		$bestStatements = $statements->getWithPropertyId( $propertyId )->getBestStatements();
+	private function getBestValues( StatementList $statements, PropertyId $propertyId ) {
 		$values = array();
 
+		$bestStatements = $statements->getWithPropertyId( $propertyId )->getBestStatements();
 		foreach ( $bestStatements->toArray() as $statement ) {
 			if ( $statement->getMainSnak() instanceof PropertyValueSnak ) {
 				$values[] = $statement->getMainSnak()->getDataValue();
