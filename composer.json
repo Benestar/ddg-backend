@@ -1,7 +1,7 @@
 {
 	"require": {
 		"php": ">=5.5.0",
-		"addwiki/wikibase-api": "~0.4"
+		"addwiki/wikibase-api": "~0.5"
 	},
 	"autoload": {
 		"psr-4": {

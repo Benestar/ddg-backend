@@ -4,11 +4,11 @@ namespace DDGWikidata;
 
 use DataValues\DataValue;
 use Mediawiki\Api\MediawikiApi;
+use RuntimeException;
 use Wikibase\Api\Service\RevisionsGetter;
 use Wikibase\Api\WikibaseFactory;
 use Wikibase\DataModel\Entity\EntityId;
 use Wikibase\DataModel\Entity\Item;
-use Wikibase\DataModel\Entity\ItemId;
 use Wikibase\DataModel\Entity\PropertyId;
 use Wikibase\DataModel\Snak\PropertyValueSnak;
 use Wikibase\DataModel\Statement\StatementList;
@@ -53,13 +53,7 @@ class PropertyValueResolver {
 		$propertyIds = $this->searchEntities( $property, 'property', $lang );
 
 		$items = $this->getItems( $itemIds );
-		list( $itemId, $propertyId, $values ) = $this->getDataValues( $items, $propertyIds );
-
-		return array(
-			'item' => $itemId,
-			'property' => $propertyId,
-			'values' => $this->formatDataValues( $values )
-		);
+		return $this->getDataValues( $items, $propertyIds );
 	}
 
 	/**
@@ -78,14 +72,7 @@ class PropertyValueResolver {
 		$ids = array();
 
 		foreach ( $response['search'] as $search ) {
-			switch ( $type ) {
-				case 'item':
-					$ids[] = new ItemId( $search['id'] );
-					break;
-				case 'property':
-					$ids[] = new PropertyId( $search['id'] );
-					break;
-			}
+			$ids[] = $search['id'];
 		}
 
 		return $ids;
@@ -100,7 +87,7 @@ class PropertyValueResolver {
 		$items = array();
 
 		foreach ( $revisions->toArray() as $revision ) {
-			$items[] = $revision->getContent()->getNativeData();
+			$items[] = $revision->getContent()->getData();
 		}
 
 		return $items;
@@ -108,20 +95,25 @@ class PropertyValueResolver {
 
 	/**
 	 * @param Item[] $items
-	 * @param PropertyId[] $propertyIds
+	 * @param string[] $propertyIds
 	 * @return DataValue[]
+	 * @throws RuntimeException
 	 */
 	private function getDataValues( array $items, array $propertyIds ) {
 		foreach ( $items as $item ) {
 			foreach ( $propertyIds as $propertyId ) {
-				$bestValues = $this->getBestValues( $item->getStatements(), $propertyId );
+				$bestValues = $this->getBestValues( $item->getStatements(), new PropertyId( $propertyId ) );
 				if ( !empty( $bestValues ) ) {
-					return array( $item->getId()->getSerialization(), $propertyId->getSerialization(), $bestValues );
+					return array(
+						'item' => $item->getId()->getSerialization(),
+						'property' => $propertyId,
+						'values' => $this->formatDataValues( $bestValues )
+					);
 				}
 			}
 		}
 
-		return array();
+		throw new RuntimeException( 'Didn\'t find any matching values.' );
 	}
 
 	
@@ -133,7 +125,7 @@ class PropertyValueResolver {
 	private function getBestValues( StatementList $statements, PropertyId $propertyId ) {
 		$values = array();
 
-		$bestStatements = $statements->getWithPropertyId( $propertyId )->getBestStatements();
+		$bestStatements = $statements->getByPropertyId( $propertyId )->getBestStatements();
 		foreach ( $bestStatements->toArray() as $statement ) {
 			if ( $statement->getMainSnak() instanceof PropertyValueSnak ) {
 				$values[] = $statement->getMainSnak()->getDataValue();
