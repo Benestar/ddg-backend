@@ -143,7 +143,7 @@ class PropertyValueResolver {
 		$formatted = array();
 
 		foreach ( $values as $value ) {
-			$formatted[] = $value->toArray();
+			$formatted[] = $value->getSortKey();
 		}
 
 		return $formatted;
