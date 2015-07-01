@@ -5,6 +5,9 @@ namespace DDGWikidata;
 use DataValues\DataValue;
 use Wikibase\DataModel\Entity\EntityIdValue;
 use Wikibase\DataModel\Entity\Item;
+use Wikibase\DataModel\Entity\PropertyId;
+use Wikibase\DataModel\Snak\PropertyValueSnak;
+use Wikibase\DataModel\Statement\StatementList;
 
 /**
  * Formatter for a list of data values.
@@ -21,6 +24,24 @@ class DataValuesFormatter {
 
 	public function __construct( ApiInteractor $apiInteractor ) {
 		$this->apiInteractor = $apiInteractor;
+	}
+
+	/**
+	 * @param StatementList $statements
+	 * @param PropertyId $propertyId
+	 * @return DataValue[]
+	 */
+	public function getBestValues( StatementList $statements, PropertyId $propertyId ) {
+		$values = array();
+
+		$bestStatements = $statements->getByPropertyId( $propertyId )->getBestStatements();
+		foreach ( $bestStatements->toArray() as $statement ) {
+			if ( $statement->getMainSnak() instanceof PropertyValueSnak ) {
+				$values[] = $statement->getMainSnak()->getDataValue();
+			}
+		}
+
+		return $values;
 	}
 
 	/**
@@ -68,8 +89,23 @@ class DataValuesFormatter {
 	private function formatItem( Item $item, $lang ) {
 		return array(
 			'title' => $item->getLabel( $lang ),
-			'subtitle' => $item->getDescription( $lang )
+			'subtitle' => $item->getDescription( $lang ),
+			'image' => $this->getImage( $item )
 		);
+	}
+
+	/**
+	 * @param Item $item
+	 * @return string|bool
+	 */
+	private function getImage( Item $item ) {
+		$values = $this->getBestValues( $item->getStatements(), new PropertyId( 'P18' ) );
+
+		if ( empty( $values ) ) {
+			return false;
+		}
+
+		return $this->apiInteractor->getImageUrl( $values[0]->getValue(), '85px' );
 	}
 
 	/**

@@ -67,4 +67,20 @@ class ApiInteractor {
 		return $items;
 	}
 
+	/**
+	 * @param string $fileName
+	 * @param int $height
+	 * @return string
+	 */
+	public function getImageUrl( $fileName, $height ) {
+		$response = $this->api->getAction( 'query', array(
+			'prop' => 'imageinfo',
+			'iiprop' => 'url',
+			'iiurlheight' => $height,
+			'titles' => $fileName
+		) );
+
+		return $response['query']['pages']['-1']['imageinfo'][0]['thumburl'];
+	}
+
 }
