@@ -54,7 +54,7 @@ class Backend {
 		return $propertyValueResolver->getResult(
 			$this->params['subject'],
 			$this->params['property'],
-			$this->params['lang'] ?: 'en'
+			isset( $this->params['lang'] ) ? $this->params['lang'] : 'en'
 		);
 	}
 
