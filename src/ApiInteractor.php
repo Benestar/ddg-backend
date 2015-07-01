@@ -77,7 +77,7 @@ class ApiInteractor {
 			'prop' => 'imageinfo',
 			'iiprop' => 'url',
 			'iiurlheight' => $height,
-			'titles' => $fileName
+			'titles' => 'File:' . $fileName
 		) );
 
 		return $response['query']['pages']['-1']['imageinfo'][0]['thumburl'];

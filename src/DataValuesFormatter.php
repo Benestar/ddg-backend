@@ -89,7 +89,7 @@ class DataValuesFormatter {
 	private function formatItem( Item $item, $lang ) {
 		return array(
 			'title' => $item->getLabel( $lang ),
-			'subtitle' => $item->getDescription( $lang ),
+			'description' => $item->getDescription( $lang ),
 			'image' => $this->getImage( $item )
 		);
 	}
