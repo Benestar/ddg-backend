@@ -51,7 +51,7 @@ class Backend {
 	private function getResult() {
 		$propertyValueResolver = new PropertyValueResolver( $this->wikibaseApi );
 
-		return $propertyValueResolver->getResult(
+		return $propertyValueResolver->resolvePropertyValue(
 			$this->params['subject'],
 			$this->params['property'],
 			isset( $this->params['lang'] ) ? $this->params['lang'] : 'en'

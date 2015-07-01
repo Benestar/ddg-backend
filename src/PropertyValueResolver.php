@@ -5,9 +5,7 @@ namespace DDGWikidata;
 use DataValues\DataValue;
 use Mediawiki\Api\MediawikiApi;
 use RuntimeException;
-use Wikibase\Api\Service\RevisionsGetter;
 use Wikibase\Api\WikibaseFactory;
-use Wikibase\DataModel\Entity\EntityId;
 use Wikibase\DataModel\Entity\Item;
 use Wikibase\DataModel\Entity\PropertyId;
 use Wikibase\DataModel\Snak\PropertyValueSnak;
@@ -23,23 +21,25 @@ use Wikibase\DataModel\Statement\StatementList;
 class PropertyValueResolver {
 
 	/**
-	 * @var MediawikiApi
+	 * @var ApiInteractor
 	 */
-	private $api;
+	private $apiInteractor;
 
 	/**
-	 * @var RevisionsGetter
+	 * @var DataValuesFormatter
 	 */
-	private $revisionsGetter;
+	private $dataValuesFormatter;
 
 	/**
 	 * @param string $wikibaseApi
 	 */
 	public function __construct( $wikibaseApi ) {
-		$this->api = new MediawikiApi( $wikibaseApi );
+		$api = new MediawikiApi( $wikibaseApi );
+		$wikibaseFactory = new WikibaseFactory( $api );
+		$revisionsGetter = $wikibaseFactory->newRevisionsGetter();
 
-		$wikibaseFactory = new WikibaseFactory( $this->api );
-		$this->revisionsGetter = $wikibaseFactory->newRevisionsGetter();
+		$this->apiInteractor = new ApiInteractor( $api, $revisionsGetter );
+		$this->dataValuesFormatter = new DataValuesFormatter( $this->apiInteractor );
 	}
 
 	/**
@@ -48,58 +48,22 @@ class PropertyValueResolver {
 	 * @param string $lang
 	 * @return array
 	 */
-	public function getResult( $subject, $property, $lang ) {
-		$itemIds = $this->searchEntities( $subject, 'item', $lang );
-		$propertyIds = $this->searchEntities( $property, 'property', $lang );
+	public function resolvePropertyValue( $subject, $property, $lang ) {
+		$itemIds = $this->apiInteractor->searchEntities( $subject, 'item', $lang );
+		$propertyIds = $this->apiInteractor->searchEntities( $property, 'property', $lang );
 
-		$items = $this->getItems( $itemIds );
-		return $this->getDataValues( $items, $propertyIds );
-	}
-
-	/**
-	 * @param string $search
-	 * @param string $type
-	 * @param string $lang
-	 * @return EntityId[]
-	 */
-	private function searchEntities( $search, $type, $lang ) {
-		$response = $this->api->getAction( 'wbsearchentities', array(
-			'search' => $search,
-			'type' => $type,
-			'language' => $lang
-		) );
-
-		$ids = array();
-
-		foreach ( $response['search'] as $search ) {
-			$ids[] = $search['id'];
-		}
-
-		return $ids;
-	}
-
-	/**
-	 * @param string[] $itemIds
-	 * @return Item[]
-	 */
-	private function getItems( array $itemIds ) {
-		$revisions = $this->revisionsGetter->getRevisions( $itemIds );
-		$items = array();
-
-		foreach ( $revisions->toArray() as $revision ) {
-			$items[] = $revision->getContent()->getData();
-		}
-
-		return $items;
+		$items = $this->apiInteractor->getItems( $itemIds );
+		return $this->getResult( $items, $propertyIds, $lang );
 	}
 
 	/**
 	 * @param Item[] $items
 	 * @param string[] $propertyIds
-	 * @return DataValue[]
+	 * @param string $lang
+	 * @return array
 	 * @throws RuntimeException
 	 */
-	private function getDataValues( array $items, array $propertyIds ) {
+	private function getResult( array $items, array $propertyIds, $lang ) {
 		foreach ( $items as $item ) {
 			foreach ( $propertyIds as $propertyId ) {
 				$bestValues = $this->getBestValues( $item->getStatements(), new PropertyId( $propertyId ) );
@@ -107,7 +71,7 @@ class PropertyValueResolver {
 					return array(
 						'item' => $item->getId()->getSerialization(),
 						'property' => $propertyId,
-						'values' => $this->formatDataValues( $bestValues )
+						'values' => $this->dataValuesFormatter->formatDataValues( $bestValues, $lang )
 					);
 				}
 			}
@@ -133,20 +97,6 @@ class PropertyValueResolver {
 		}
 
 		return $values;
-	}
-
-	/**
-	 * @param DataValue[] $values
-	 * @return array
-	 */
-	private function formatDataValues( array $values ) {
-		$formatted = array();
-
-		foreach ( $values as $value ) {
-			$formatted[] = $value->getSortKey();
-		}
-
-		return $formatted;
 	}
 
 }
