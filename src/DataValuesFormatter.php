@@ -3,6 +3,7 @@
 namespace DDGWikidata;
 
 use DataValues\DataValue;
+use Exception;
 use Wikibase\DataModel\Entity\EntityIdValue;
 use Wikibase\DataModel\Entity\Item;
 use Wikibase\DataModel\Entity\PropertyId;
@@ -90,7 +91,8 @@ class DataValuesFormatter {
 		return array(
 			'title' => $item->getLabel( $lang ),
 			'description' => $item->getDescription( $lang ),
-			'image' => $this->getImage( $item )
+			'image' => $this->getImage( $item ),
+			'url' => 'http://www.wikidata.org/wiki/' . $item->getId()->getSerialization()
 		);
 	}
 
@@ -105,7 +107,7 @@ class DataValuesFormatter {
 			return false;
 		}
 
-		return $this->apiInteractor->getImageUrl( $values[0]->getValue(), '85px' );
+		return $this->apiInteractor->getImageUrl( $values[0]->getValue(), '120px' );
 	}
 
 	/**
@@ -114,9 +116,7 @@ class DataValuesFormatter {
 	 * @return array
 	 */
 	private function formatDataValue( DataValue $value, $lang ) {
-		return array(
-			'title' => $value->getSortKey()
-		);
+		throw new Exception( 'Cannot render data value of type ' . $value->getType() ); 
 	}
 
 }
