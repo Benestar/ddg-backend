@@ -93,7 +93,8 @@ class DataValuesFormatter {
 			'title' => $item->getLabel( $lang ),
 			'description' => $item->getDescription( $lang ),
 			'image' => $this->getImage( $item ),
-			'url' => 'http://www.wikidata.org/wiki/' . $item->getId()->getSerialization()
+			'url' => 'http://www.wikidata.org/wiki/' . $item->getId()->getSerialization(),
+			'type' => 'wikibase-entity'
 		);
 	}
 
