@@ -108,7 +108,7 @@ class DataValuesFormatter {
 			return false;
 		}
 
-		return $this->apiInteractor->getImageUrl( $values[0]->getValue(), '120px' );
+		return $this->apiInteractor->getImageUrl( $values[0]->getValue(), '280px' );
 	}
 
 	/**
