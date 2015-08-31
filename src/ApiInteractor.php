@@ -2,6 +2,8 @@
 
 namespace DDGWikidata;
 
+use DataValues\DataValue;
+use DataValues\Serializers\DataValueSerializer;
 use Mediawiki\Api\MediawikiApi;
 use Wikibase\Api\Service\RevisionsGetter;
 use Wikibase\DataModel\Entity\EntityId;
@@ -81,6 +83,20 @@ class ApiInteractor {
 		) );
 
 		return $response['query']['pages']['-1']['imageinfo'][0]['thumburl'];
+	}
+
+	/**
+	 * @param DataValue $dataValue
+	 * @return string
+	 */
+	public function formatDataValue( DataValue $dataValue ) {
+		$serializer = new DataValueSerializer();
+		$response = $this->api->getAction( 'wbformatvalue', array(
+			'generate' => 'text/html',
+			'datavalue' => $serializer->serialize( $dataValue )
+		) );
+
+		return $response['result'];
 	}
 
 }

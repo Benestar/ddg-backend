@@ -38,8 +38,9 @@ class DataValuesFormatter {
 
 		$bestStatements = $statements->getByPropertyId( $propertyId )->getBestStatements();
 		foreach ( $bestStatements->toArray() as $statement ) {
-			if ( $statement->getMainSnak() instanceof PropertyValueSnak ) {
-				$values[] = $statement->getMainSnak()->getDataValue();
+			$mainSnak = $statement->getMainSnak();
+			if ( $mainSnak instanceof PropertyValueSnak ) {
+				$values[] = $mainSnak->getDataValue();
 			}
 		}
 
@@ -52,19 +53,24 @@ class DataValuesFormatter {
 	 * @return array
 	 */
 	public function formatDataValues( array $values, $lang ) {
-		$formatted = array();
+		$formattedValues = array();
 
 		$items = $this->apiInteractor->getItems( $this->getItemIds( $values ) );
 
 		foreach ( $values as $value ) {
 			if ( $value instanceof EntityIdValue ) {
-				$formatted[] = $this->formatItem( $items[$value->getEntityId()->getSerialization()], $lang );
+				$formatted = $this->formatItem( $items[$value->getEntityId()->getSerialization()], $lang );
 			} else {
-				$formatted[] = $this->formatDataValue( $value, $lang );
+				$formatted = $this->formatDataValue( $value, $lang );
 			}
+
+			$formattedValues[] = array(
+				'type' => $value->getType(),
+				'value' => $formatted
+			);
 		}
 
-		return $formatted;
+		return $formattedValues;
 	}
 
 	/**
@@ -93,8 +99,7 @@ class DataValuesFormatter {
 			'title' => $item->getLabel( $lang ),
 			'description' => $item->getDescription( $lang ),
 			'image' => $this->getImage( $item ),
-			'url' => 'http://www.wikidata.org/wiki/' . $item->getId()->getSerialization(),
-			'type' => 'wikibase-entity'
+			'url' => 'http://www.wikidata.org/wiki/' . $item->getId()->getSerialization()
 		);
 	}
 
@@ -118,8 +123,9 @@ class DataValuesFormatter {
 	 * @return array
 	 */
 	private function formatDataValue( DataValue $value, $lang ) {
-		$serializer = new DataValueSerializer();
-		return $serializer->serialize( $value );
+		return array(
+			'title' => $this->apiInteractor->formatDataValue( $value )
+		);
 	}
 
 }
