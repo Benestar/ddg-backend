@@ -3,6 +3,7 @@
 namespace DDGWikidata;
 
 use DataValues\DataValue;
+use DataValues\Serializers\DataValueSerializer;
 use Exception;
 use Wikibase\DataModel\Entity\EntityIdValue;
 use Wikibase\DataModel\Entity\Item;
@@ -116,7 +117,8 @@ class DataValuesFormatter {
 	 * @return array
 	 */
 	private function formatDataValue( DataValue $value, $lang ) {
-		throw new Exception( 'Cannot render data value of type ' . $value->getType() ); 
+		$serializer = new DataValueSerializer();
+		return $serializer->serialize( $value );
 	}
 
 }
