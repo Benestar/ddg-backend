@@ -64,10 +64,8 @@ class DataValuesFormatter {
 				$formatted = $this->formatDataValue( $value, $lang );
 			}
 
-			$formattedValues[] = array(
-				'type' => $value->getType(),
-				'value' => $formatted
-			);
+			$formatted['type'] = $value->getType();
+			$formattedValues[] = $formatted;
 		}
 
 		return $formattedValues;
