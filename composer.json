@@ -1,7 +1,17 @@
 {
 	"require": {
 		"php": ">=5.5.0",
-		"addwiki/wikibase-api": "~0.5"
+		"addwiki/wikibase-api": "~0.7",
+		"addwiki/mediawiki-api-base": "~2.0",
+		"wikibase/data-model-serialization": "~2.0",
+		"wikibase/data-model": "~4.2|~5.0|~6.0",
+		"data-values/data-values": "~1.0.0",
+		"data-values/common": "~0.3.0",
+		"data-values/geo": "~1.0|~0.2.0",
+		"data-values/number": "~0.5.0|~0.6.0|~0.7.0|~0.8.0",
+		"data-values/time": "~0.8.0",
+		"data-values/validators": "~0.1.0",
+		"data-values/serialization": "~1.0"
 	},
 	"autoload": {
 		"psr-4": {

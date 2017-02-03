@@ -2,6 +2,8 @@
 
 namespace DDGWikidata;
 
+use DataValues\Deserializers\DataValueDeserializer;
+use DataValues\Serializers\DataValueSerializer;
 use Mediawiki\Api\MediawikiApi;
 use RuntimeException;
 use Wikibase\Api\WikibaseFactory;
@@ -18,6 +20,22 @@ use Wikibase\DataModel\Entity\PropertyId;
 class PropertyValueResolver {
 
 	/**
+	 * @var string[]
+	 */
+	private static $dataValueClasses = array(
+		'unknown' => 'DataValues\UnknownValue',
+		'string' => 'DataValues\StringValue',
+		'boolean' => 'DataValues\BooleanValue',
+		'number' => 'DataValues\NumberValue',
+		'globecoordinate' => 'DataValues\Geo\Values\GlobeCoordinateValue',
+		'monolingualtext' => 'DataValues\MonolingualTextValue',
+		'multilingualtext' => 'DataValues\MultilingualTextValue',
+		'quantity' => 'DataValues\QuantityValue',
+		'time' => 'DataValues\TimeValue',
+		'wikibase-entityid' => 'Wikibase\DataModel\Entity\EntityIdValue',
+	);
+
+	/**
 	 * @var ApiInteractor
 	 */
 	private $apiInteractor;
@@ -28,11 +46,15 @@ class PropertyValueResolver {
 	private $dataValuesFormatter;
 
 	/**
-	 * @param string $wikibaseApi
+	 * @param string $apiUrl
 	 */
-	public function __construct( $wikibaseApi ) {
-		$api = new MediawikiApi( $wikibaseApi );
-		$wikibaseFactory = new WikibaseFactory( $api );
+	public function __construct( $apiUrl ) {
+		$api = new MediawikiApi( $apiUrl );
+		$wikibaseFactory = new WikibaseFactory(
+			$api,
+			new DataValueDeserializer( self::$dataValueClasses ),
+			new DataValueSerializer()
+		);
 		$revisionsGetter = $wikibaseFactory->newRevisionsGetter();
 
 		$this->apiInteractor = new ApiInteractor( $api, $revisionsGetter );

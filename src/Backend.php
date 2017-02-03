@@ -20,11 +20,15 @@ class Backend {
 	/**
 	 * @var string
 	 */
-	private $wikibaseApi;
+	private $apiUrl;
 
-	public function __construct( array $params, $wikibaseApi ) {
+	/**
+	 * @param string[] $params
+	 * @param string $apiUrl
+	 */
+	public function __construct( array $params, $apiUrl ) {
 		$this->params = $params;
-		$this->wikibaseApi = $wikibaseApi;
+		$this->apiUrl = $apiUrl;
 	}
 
 	public function execute() {
@@ -49,7 +53,7 @@ class Backend {
 	}
 
 	private function getResult() {
-		$propertyValueResolver = new PropertyValueResolver( $this->wikibaseApi );
+		$propertyValueResolver = new PropertyValueResolver( $this->apiUrl );
 
 		return $propertyValueResolver->resolvePropertyValue(
 			$this->params['subject'],

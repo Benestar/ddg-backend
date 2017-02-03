@@ -5,6 +5,7 @@ namespace DDGWikidata;
 use DataValues\DataValue;
 use DataValues\Serializers\DataValueSerializer;
 use Mediawiki\Api\MediawikiApi;
+use Mediawiki\Api\SimpleRequest;
 use Wikibase\Api\Service\RevisionsGetter;
 use Wikibase\DataModel\Entity\EntityId;
 use Wikibase\DataModel\Entity\Item;
@@ -38,11 +39,11 @@ class ApiInteractor {
 	 * @return EntityId[]
 	 */
 	public function searchEntities( $search, $type, $lang ) {
-		$response = $this->api->getAction( 'wbsearchentities', array(
+		$response = $this->api->getRequest( new SimpleRequest( 'wbsearchentities', array(
 			'search' => $search,
 			'type' => $type,
 			'language' => $lang
-		) );
+		) ) );
 
 		$ids = array();
 
@@ -75,12 +76,12 @@ class ApiInteractor {
 	 * @return string
 	 */
 	public function getImageUrl( $fileName, $height ) {
-		$response = $this->api->getAction( 'query', array(
+		$response = $this->api->getRequest( new SimpleRequest( 'query', array(
 			'prop' => 'imageinfo',
 			'iiprop' => 'url',
 			'iiurlheight' => $height,
 			'titles' => 'File:' . $fileName
-		) );
+		) ) );
 
 		return $response['query']['pages']['-1']['imageinfo'][0]['thumburl'];
 	}
@@ -91,10 +92,10 @@ class ApiInteractor {
 	 */
 	public function formatDataValue( DataValue $dataValue ) {
 		$serializer = new DataValueSerializer();
-		$response = $this->api->getAction( 'wbformatvalue', array(
+		$response = $this->api->getRequest( new SimpleRequest( 'wbformatvalue', array(
 			'generate' => 'text/html',
 			'datavalue' => $serializer->serialize( $dataValue )
-		) );
+		) ) );
 
 		return $response['result'];
 	}
