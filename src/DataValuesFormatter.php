@@ -55,7 +55,15 @@ class DataValuesFormatter {
 	public function formatDataValues( array $values, $lang ) {
 		$formattedValues = array();
 
-		$items = $this->apiInteractor->getItems( $this->getItemIds( $values ) );
+		$itemIds = $this->getItemIds( $values );
+
+		// Check if there are any item ids because RevisionsGetter
+		// cannot handle an empty list of ids
+		if ( !empty( $itemIds ) ) {
+			$items = $this->apiInteractor->getItems( $itemIds );
+		} else {
+			$items = array();
+		}
 
 		foreach ( $values as $value ) {
 			if ( $value instanceof EntityIdValue ) {

@@ -44,7 +44,8 @@ class Backend {
 
 	private function checkParams() {
 		if ( empty( $this->params ) ) {
-			throw new Exception( 'Please provide a `subject` and a `property`. The optional `lang` parameter defaults to "en".' );
+			throw new Exception( 'Please provide the parameters `subject` and `property`. '
+				. 'The optional `lang` parameter defaults to \'en\'.' );
 		}
 
 		if ( !isset( $this->params['subject'] ) || !isset( $this->params['property'] ) ) {
