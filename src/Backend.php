@@ -38,7 +38,10 @@ class Backend {
 		}
 		catch ( Exception $ex ) {
 			@http_response_code( 400 );
-			$this->outputResult( array( 'error' => $ex->getMessage() ) );
+			$this->outputResult( array(
+				'error' => $ex->getMessage(),
+				'trace' => $ex->getTraceAsString()
+			) );
 		}
 	}
 
