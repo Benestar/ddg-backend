@@ -94,7 +94,7 @@ class ApiInteractor {
 		$serializer = new DataValueSerializer();
 		$response = $this->api->getRequest( new SimpleRequest( 'wbformatvalue', array(
 			'generate' => 'text/html',
-			'datavalue' => $serializer->serialize( $dataValue )
+			'datavalue' => json_encode( $serializer->serialize( $dataValue ) )
 		) ) );
 
 		return $response['result'];
